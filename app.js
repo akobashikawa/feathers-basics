@@ -1,4 +1,5 @@
 const feathers = require('@feathersjs/feathers');
+const express = require("@feathersjs/express");
 const { BadRequest } = require("@feathersjs/errors");
 
 class Messages {
@@ -46,80 +47,20 @@ class Messages {
   }
 }
 
-const validate = async context => {
-  const {data} = context;
+const app = express(feathers());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.configure(express.rest());
 
-  if (!data.text) {
-    throw new BadRequest('Message text must exist');
-  }
-
-  if (typeof data.text !== "string" || data.text.trim() === "") {
-    throw new BadRequest("Message text is invalid");
-  }
-
-  context.data = {
-    text: data.text.toString()
-  }
-
-  return context;
-};
-
-const app = feathers();
-
-// register service
 app.use('messages', new Messages());
 
-app.hooks({
-  error: async context => {
-    console.error(`Error in ${context.path} service, method ${context.method},`, context.error.stack);
-  }
+app.use(express.errorHandler());
+const server = app.listen(3030);
+
+app.service("messages").create({
+  text: "Hello from the server"
 });
 
-// use service
-const setTimestamp = name => {
-  return async context => {
-    context.data[name] = new Date();
-    return context;
-  }
-};
-
-async function processMessages() {
-  const messagesHooks = {
-    before: {
-      create: validate,
-      update: validate,
-      patch: validate,
-    }
-  };
-  app.service('messages').hooks(messagesHooks);
-
-  app.service('messages').on('created', message => {
-    console.log('Created a new message', message);
-  });
-  
-  app.service('messages').on('removed', message => {
-    console.log('Deleted message', message);
-  });
-
-  await app.service('messages').create({
-    text: 'First message'
-  });
-
-  await app.service('messages').create({
-    text: ''
-  });
-
-  const lastMessage = await app.service('messages').create({
-    text: 'Last message'
-  });
-
-  let messageList = await app.service('messages').find();
-  console.log('Available messages', messageList);
-  
-  await app.service('messages').remove(lastMessage.id);
-
-  messageList = await app.service('messages').find();
-  console.log('Available messages', messageList);
-}
-
-processMessages();
+server.on("listening", () =>
+  console.log("Feathers REST API started at http://localhost:3030")
+);

@@ -59,12 +59,13 @@ const setTimestamp = name => {
 };
 
 async function processMessages() {
-  app.service('messages').hooks({
+  const messagesHooks = {
     before: {
       create: setTimestamp('createdAt'),
       update: setTimestamp('updatedAt')
     }
-  });
+  };
+  app.service('messages').hooks(messagesHooks);
 
   app.service('messages').on('created', message => {
     console.log('Created a new message', message);

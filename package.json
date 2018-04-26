@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@feathersjs/errors": "^3.3.0",
     "@feathersjs/feathers": "^3.1.4"
   }
 }

@@ -51,7 +51,21 @@ const app = feathers();
 app.use('messages', new Messages());
 
 // use service
+const setTimestamp = name => {
+  return async context => {
+    context.data[name] = new Date();
+    return context;
+  }
+};
+
 async function processMessages() {
+  app.service('messages').hooks({
+    before: {
+      create: setTimestamp('createdAt'),
+      update: setTimestamp('updatedAt')
+    }
+  });
+
   app.service('messages').on('created', message => {
     console.log('Created a new message', message);
   });

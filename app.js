@@ -22,7 +22,7 @@ class Messages {
   }
 
   async create(data, params) {
-    const message = Object.assign({id: ++this.currentId}, data);
+    const message = Object.assign({ id: ++this.currentId }, data);
 
     this.messages.push(message);
 
@@ -47,19 +47,24 @@ class Messages {
 }
 
 const validate = async context => {
-  const {data} = context;
+  console.log(context.data);
+  const { data } = context;
 
   if (!data.text) {
     throw new BadRequest('Message text must exist');
   }
 
+  console.log('data.text', data.text);
+
   if (typeof data.text !== "string" || data.text.trim() === "") {
     throw new BadRequest("Message text is invalid");
   }
 
+  console.log('context.data', context.data);
   context.data = {
     text: data.text.toString()
   }
+  console.log('context.data', context.data);
 
   return context;
 };
@@ -87,8 +92,8 @@ async function processMessages() {
   const messagesHooks = {
     before: {
       create: validate,
-      update: validate,
-      patch: validate,
+      // update: validate,
+      // patch: validate,
     }
   };
   app.service('messages').hooks(messagesHooks);
@@ -96,7 +101,7 @@ async function processMessages() {
   app.service('messages').on('created', message => {
     console.log('Created a new message', message);
   });
-  
+
   app.service('messages').on('removed', message => {
     console.log('Deleted message', message);
   });
@@ -106,7 +111,8 @@ async function processMessages() {
   });
 
   await app.service('messages').create({
-    text: ''
+    // text: '' // fail
+    text: 'Second message'
   });
 
   const lastMessage = await app.service('messages').create({
@@ -115,7 +121,7 @@ async function processMessages() {
 
   let messageList = await app.service('messages').find();
   console.log('Available messages', messageList);
-  
+
   await app.service('messages').remove(lastMessage.id);
 
   messageList = await app.service('messages').find();
